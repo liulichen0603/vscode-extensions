@@ -16,6 +16,20 @@ export function activate(context: vscode.ExtensionContext) {
 			QSearchViewPanel.createOrShow(context.extensionUri);
 			// pbTest(context.extensionUri);
 			// cpTest(context.extensionUri);
+			HttpUtils.get('www.d.com')
+				.then(function (response) {
+
+				})
+				.catch(function (error) {
+
+				});
+			HttpUtils.post('www.d.com', {p1: 1})
+				.then(function(response) {
+
+				})
+				.catch(function(error) {
+
+				});
 		})
 	);
 

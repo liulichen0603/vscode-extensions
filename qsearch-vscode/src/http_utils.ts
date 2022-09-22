@@ -6,51 +6,28 @@ import { Log, LogLevel } from './log'
 export class HttpUtils {
   public static httpInstance : HttpUtils | undefined;
 
-  // type CreateUserResponse = {
-  //   name: string;
-  //   job: string;
-  //   id: string;
-  //   createdAt: string;
-  // };
-  
-  // async static function postRequest() {
-  //   try {
-  //     // 👇️ const data: CreateUserResponse
-  //     const { data } = await axios.post<CreateUserResponse>(
-  //       'https://reqres.in/api/users',
-  //       { name: 'John Smith', job: 'manager' },
-  //       {
-  //         headers: {
-  //           'Content-Type': 'application/json',
-  //           Accept: 'application/json',
-  //         },
-  //       },
-  //     );
-  
-  //     console.log(JSON.stringify(data, null, 4));
-  
-  //     return data;
-  //   } catch (error) {
-  //     if (axios.isAxiosError(error)) {
-  //       console.log('error message: ', error.message);
-  //       // 👇️ error: AxiosError<any, any>
-  //       return error.message;
-  //     } else {
-  //       console.log('unexpected error: ', error);
-  //       return 'An unexpected error occurred';
-  //     }
-  //   }
-  // }
+  static async get(url: string) {
+    try {
+      const response = await axios.get(url);
+      console.log(response);
+    } catch (error) {
+      Log(LogLevel.error, 'http get error: ' + error);
+    }
+  }
 
-  public static postData(url : string, param : any, callback : Function, catchback : Function) {
-    HttpUtils._initInstance();
-    axios.post(url, param)
-      .then(function(response) {
-
-      })
-      .catch(function(error) {
-
-      });
+  static async post(url: string, data: any) {
+    try {
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      };
+      const response = await axios.post(url, data, config);
+      console.log(response);
+    } catch (error) {
+      Log(LogLevel.error, 'http post error: ' + error);
+    }
   }
 
   private static _initInstance() {
