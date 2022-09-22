@@ -1,0 +1,7 @@
+// sample.proto
+package samplepackage;
+syntax = "proto3";
+
+message SampleMessage {
+    string sample_field = 1;
+}
