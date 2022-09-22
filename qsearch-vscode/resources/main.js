@@ -105,8 +105,11 @@
             let td3 = document.createElement('th');
             td3.innerHTML = /** @type {string} */ (value.count);
             tr.appendChild(td3);
-            tr.onclick = function() {
+            tr.onclick = function(event) {
                 filePreview.innerHTML = /** @type {string} */ (value.fileData);
+            }
+            tr.ondblclick = function(event) {
+                sendMessageToExtension('OpenFileInVSCode', value.filePath);
             }
         });
     }

@@ -15,10 +15,10 @@ function exec(command: string, options: cp.ExecOptions): Promise<{ stdout: strin
 
 let _channel: vscode.OutputChannel;
 function getOutputChannel(): vscode.OutputChannel {
-	if (!_channel) {
-		_channel = vscode.window.createOutputChannel('Output Channel');
-	}
-	return _channel;
+  if (!_channel) {
+    _channel = vscode.window.createOutputChannel('Output Channel');
+  }
+  return _channel;
 }
 
 // export async function cpTest() {
