@@ -33,6 +33,11 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
+  context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(function (event) {
+    // todo: notify the server the file is saved
+    Log(LogLevel.info, `file saved!`);
+  }));
+
   if (vscode.window.registerWebviewPanelSerializer) {
     // Make sure we register a serializer in activation event
     vscode.window.registerWebviewPanelSerializer(QSearchViewPanel.viewType, {
