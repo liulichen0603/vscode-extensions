@@ -1,35 +1,24 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import * as path from 'path';
 
 import { Log, LogLevel } from './log'
 import * as utils from './utils';
-import { cpTest } from './cp_utils';
+import * as cpUtils from './cp_utils';
 import { pbTest } from './pb_utils';
 import { FileUtils } from './file_utils'
 import { HttpUtils } from './http_utils'
+
+const gServerPort = 63303;
 
 export function activate(context: vscode.ExtensionContext) {
   Log(LogLevel.info, 'Congratulations, your extension "qsearch" is now active!');
   context.subscriptions.push(
     vscode.commands.registerCommand('QSearch.StartSearch', () => {
       QSearchViewPanel.createOrShow(context.extensionUri);
-      // pbTest(context.extensionUri);
-      // cpTest(context.extensionUri);
-      HttpUtils.get('www.d.com')
-        .then(function (response) {
-
-        })
-        .catch(function (error) {
-
-        });
-      HttpUtils.post('www.d.com', {p1: 1})
-        .then(function(response) {
-
-        })
-        .catch(function(error) {
-
-        });
+      copyServerConfig(context.extensionUri);
+      startServer(context.extensionUri);
     })
   );
 
@@ -48,6 +37,38 @@ export function activate(context: vscode.ExtensionContext) {
         QSearchViewPanel.revive(webviewPanel, context.extensionUri);
       }
     });
+  }
+}
+
+function copyServerConfig(extensionUri : vscode.Uri) {
+  if (utils.hasWorkspaceFolder()) {
+    let src : string = vscode.Uri.joinPath(extensionUri, 'resources', 'vs-chromium-project.txt').fsPath;
+    let dst : string = path.join(utils.getWorkspaceFolder(), 'vs-chromium-project.txt');
+    FileUtils.copyFile(src, dst, function(){
+      Log(LogLevel.info, 'copyServerConfig success');
+    });
+  } else {
+    Log(LogLevel.warn, 'copyServerConfig no workspace folder opened');
+  }
+}
+
+function startServer(extensionUri : vscode.Uri) {
+  if (utils.hasWorkspaceFolder()) {
+    let command : string = 'start';
+    let args : Array<string> = [
+      vscode.Uri.joinPath(extensionUri, 'resources', 'server', 'MyTest.exe').fsPath,
+      utils.getWorkspaceFolder(),
+      gServerPort.toString()
+    ];
+    cpUtils.runAsync(command, args);
+
+    args = [
+      vscode.Uri.joinPath(extensionUri, 'resources', 'server', 'VsChromium.Server.exe').fsPath,
+      '63301'
+    ];
+    cpUtils.runAsync(command, args);
+  } else {
+    Log(LogLevel.warn, 'startServer no workspace folder opened');
   }
 }
 
@@ -110,20 +131,37 @@ class QSearchViewPanel {
       Log(LogLevel.info, 'onDidReceiveMessage command: ' + message.command + ', text: ' + message.text.toString());
       switch (message.command) {
         case 'StartSearch':
-          const fileName = 'utils.ts';
-          const filePath = 'src\\utils.ts';
-          const fileData = FileUtils.readFileSync(vscode.Uri.joinPath(this._extensionUri, filePath).fsPath);
-          const count = '1';
-          let text = [{
-            fileName: fileName,
-            filePath: filePath,
-            count: count,
-            fileData: fileData
-          }];
-          this.sendMessageToWebview('ShowResult', text);
+          HttpUtils.post('http://127.0.0.1:63303/', JSON.stringify({
+            'SearchString': message.text.searchString,
+            'SearchPath': message.text.searchFile
+          }), function(userData : any, response : any) {
+            Log(LogLevel.info, 'StartSearch response');
+            let cls : QSearchViewPanel = userData;
+            if (!response.data.IsEmpty) {
+              let text = [];
+              let entries = response.data.Entries;
+              for (let i = 0; i < entries.length; i++) {
+                let filePath = entries[i].Name;
+                let fileName = path.basename(entries[i].Name);
+                let count = entries[i].Data.Positions.length;
+                let fileData = FileUtils.readFileSync(path.normalize(path.join(utils.getWorkspaceFolder(), filePath)));
+                text.push({
+                  fileName: fileName,
+                  filePath: filePath,
+                  count: count,
+                  fileData: fileData
+                });
+              }
+              cls.sendMessageToWebview('ShowResult', text);
+            } else {
+              cls.sendMessageToWebview('ShowResult', []);
+            }
+          }, function(userData : any, error : any) {
+            Log(LogLevel.error, 'StartSearch error');
+          }, this);
           break;
         case 'OpenFileInVSCode':
-          vscode.workspace.openTextDocument(vscode.Uri.joinPath(this._extensionUri, message.text))
+          vscode.workspace.openTextDocument(path.join(utils.getWorkspaceFolder(), message.text))
             .then((document) => {
               vscode.window.showTextDocument(document, undefined, true);
             });
@@ -173,7 +211,7 @@ class QSearchViewPanel {
     const stylesMainUri = webview.asWebviewUri(stylesMainPath);
 
     // Use a nonce to only allow specific scripts to be run
-    const nonce = getNonce();
+    const nonce = utils.getNonce();
 
     return `<!DOCTYPE html>
       <html lang="en">
@@ -195,14 +233,5 @@ class QSearchViewPanel {
       </body>
       </html>`;
   }
-}
-
-function getNonce() {
-  let text = '';
-  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  for (let i = 0; i < 32; i++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
-  }
-  return text;
 }
 

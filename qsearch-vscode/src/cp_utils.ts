@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import { error } from 'console';
 
+import { Log, LogLevel } from './log'
+
 function exec(command: string, options: cp.ExecOptions): Promise<{ stdout: string; stderr: string }> {
   return new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
     cp.exec(command, options, (error, stdout, stderr) => {
@@ -56,11 +58,32 @@ export function cpTest(extensionUri : vscode.Uri): String {
   if (proc !== null) {
     if (proc.stdout !== null && proc.stdout.toString() !== '') {
       procData = proc.stdout.toString();
-      vscode.window.showErrorMessage("The '" + testExePath + "' process success: " + procData);
+      Log(LogLevel.info, "The '" + testExePath + "' process success: " + procData);
     }
     if (proc.stderr !== null && proc.stderr.toString() !== '') {
       const procErr = proc.stderr.toString;
-      vscode.window.showErrorMessage("The '" + testExePath + "' process failed: " + procErr);
+      Log(LogLevel.error, "The '" + testExePath + "' process failed: " + procErr);
+    }
+  }
+
+  return procData;
+}
+
+export function runAsync(command : string, args : Array<string>) : string {
+  const proc = cp.spawn(command, args, {
+    shell: true
+  });
+
+  let procData = proc.stdout.toString();
+
+  if (proc !== null) {
+    if (proc.stdout !== null && proc.stdout.toString() !== '') {
+      procData = proc.stdout.toString();
+      Log(LogLevel.info, "The '" + command + "' process success: " + procData);
+    }
+    if (proc.stderr !== null && proc.stderr.toString() !== '') {
+      const procErr = proc.stderr.toString;
+      Log(LogLevel.error, "The '" + command + "' process failed: " + procErr);
     }
   }
 
