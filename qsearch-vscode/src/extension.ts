@@ -69,6 +69,7 @@ class QSearchViewPanel {
   private readonly _panel: vscode.WebviewPanel;
   private readonly _extensionUri: vscode.Uri;
   private _disposables: vscode.Disposable[] = [];
+  private _initialized = false;
 
   public static createOrShow(extensionUri: vscode.Uri) {
     const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
@@ -151,8 +152,11 @@ class QSearchViewPanel {
   }
 
   private _updateForWebview(webview: vscode.Webview) {
-    this._panel.title = 'QSearch';
-    this._panel.webview.html = this._getHtmlForWebview(webview, 'https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif');
+    if (!this._initialized){
+      this._panel.title = 'QSearch';
+      this._panel.webview.html = this._getHtmlForWebview(webview, 'https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif');
+      this._initialized = true;
+    }
   }
 
   private _getHtmlForWebview(webview: vscode.Webview, gifPath: string) {
