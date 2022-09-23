@@ -11,6 +11,8 @@ import { FileUtils } from './file_utils'
 import { HttpUtils } from './http_utils'
 
 const gServerPort = 63303;
+const gServerUrl = 'http://127.0.0.1:' + gServerPort + '/';
+let serverStarted = false;
 
 export function activate(context: vscode.ExtensionContext) {
   Log(LogLevel.info, 'Congratulations, your extension "qsearch" is now active!');
@@ -53,7 +55,7 @@ function copyServerConfig(extensionUri : vscode.Uri) {
 }
 
 function startServer(extensionUri : vscode.Uri) {
-  if (utils.hasWorkspaceFolder()) {
+  if (!serverStarted) {
     let command : string = 'start';
     let args : Array<string> = [
       vscode.Uri.joinPath(extensionUri, 'resources', 'server', 'MyTest.exe').fsPath,
@@ -67,8 +69,9 @@ function startServer(extensionUri : vscode.Uri) {
       '63301'
     ];
     cpUtils.runAsync(command, args);
+    serverStarted = true;
   } else {
-    Log(LogLevel.warn, 'startServer no workspace folder opened');
+    Log(LogLevel.warn, 'startServer server has been started');
   }
 }
 
@@ -93,7 +96,7 @@ class QSearchViewPanel {
   private _initialized = false;
 
   public static createOrShow(extensionUri: vscode.Uri) {
-    const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
+    const column = vscode.ViewColumn.Two;
 
     if (QSearchViewPanel.currentPanel) {
       QSearchViewPanel.currentPanel._panel.reveal(column);
@@ -139,9 +142,12 @@ class QSearchViewPanel {
       Log(LogLevel.info, 'onDidReceiveMessage command: ' + message.command + ', text: ' + message.text.toString());
       switch (message.command) {
         case 'StartSearch':
-          HttpUtils.post('http://127.0.0.1:63303/', JSON.stringify({
+          HttpUtils.post(gServerUrl, JSON.stringify({
             'SearchString': message.text.searchString,
-            'SearchPath': message.text.searchFile
+            'SearchPath': message.text.searchFile,
+            'MatchCase': message.text.caseSensitive,
+            'MatchWholeWord': message.text.allMatch,
+            'Regex': message.text.regexMatch
           }), function(userData : any, response : any) {
             Log(LogLevel.info, 'StartSearch response');
             let cls : QSearchViewPanel = userData;
@@ -152,12 +158,16 @@ class QSearchViewPanel {
                 let filePath = entries[i].Name;
                 let fileName = path.basename(entries[i].Name);
                 let count = entries[i].Data.Positions.length;
+                let startPos = entries[i].Data.Positions[0].Position;
+                let endPos = startPos + entries[i].Data.Positions[0].length;
                 let fileData = FileUtils.readFileSync(path.normalize(path.join(utils.getWorkspaceFolder(), filePath)));
                 text.push({
                   fileName: fileName,
                   filePath: filePath,
                   count: count,
-                  fileData: fileData
+                  fileData: fileData,
+                  startPos: startPos,
+                  endPos: endPos
                 });
               }
               cls.sendMessageToWebview('ShowResult', text);
@@ -169,9 +179,17 @@ class QSearchViewPanel {
           }, this);
           break;
         case 'OpenFileInVSCode':
-          vscode.workspace.openTextDocument(path.join(utils.getWorkspaceFolder(), message.text))
+          let filePath = message.text.filePath;
+          let startPos = message.text.startPos;
+          let endPos = message.text.endPos;
+          let startPosition = new vscode.Position(startPos, 0);
+          let endPosition = new vscode.Position(startPos, 0);
+          vscode.workspace.openTextDocument(path.join(utils.getWorkspaceFolder(), filePath))
             .then((document) => {
-              vscode.window.showTextDocument(document, undefined, true);
+              vscode.window.showTextDocument(document, {
+                viewColumn: vscode.ViewColumn.One
+                // selection: new vscode.Range(startPosition, endPosition)
+            });
             });
           break;
       }
@@ -186,6 +204,8 @@ class QSearchViewPanel {
 
   public dispose() {
     QSearchViewPanel.currentPanel = undefined;
+    HttpUtils.post(gServerUrl + 'shutdown', null, function(userData : any, response : any) {}, function(userData : any, error : any) {}, null);
+    serverStarted = false;
 
     // Clean up resources.
     this._panel.dispose();

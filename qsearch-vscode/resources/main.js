@@ -118,7 +118,10 @@
                 filePreview.innerText = /** @type {string} */ (value.fileData);
             }
             tr.ondblclick = function(event) {
-                sendMessageToExtension('OpenFileInVSCode', value.filePath);
+                sendMessageToExtension('OpenFileInVSCode', {
+                    filePath: value.filePath, 
+                    startPos: value.startPos,
+                    endPos: value.endPos});
             }
         });
     }
