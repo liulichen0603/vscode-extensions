@@ -15,7 +15,7 @@ export class HttpUtils {
     }
   }
 
-  static async post(url: string, data: any) {
+  static async post(url: string, data: any, responseBack : Function, errorBack : Function, userData : any) {
     try {
       const config = {
         headers: {
@@ -24,9 +24,10 @@ export class HttpUtils {
         },
       };
       const response = await axios.post(url, data, config);
-      console.log(response);
+      responseBack(userData, response);
     } catch (error) {
       Log(LogLevel.error, 'http post error: ' + error);
+      errorBack(userData, error);
     }
   }
 

@@ -48,10 +48,15 @@
     }
     function initSearchButton() {
         let btn = document.createElement('button');
-        btn.innerHTML = 'Search';
+        btn.innerText = 'Search';
         btn.onclick = function() {
+            for (let i = searchResults.children.length - 1; i >= 0; i--) {
+                searchResults.removeChild(searchResults.childNodes[i]);
+            }
+            filePreview.innerText = 'file-preview';
             let searchParams = {
-                searchStrings: searchString.value,
+                searchString: searchString.value,
+                searchFile: searchFile.value,
                 caseSensitive: caseSensitive.checked,
                 allMatch: allMatch.checked,
                 regexMatch: regexMatch.checked
@@ -71,13 +76,13 @@
         let tr = document.createElement('tr');
         searchResults.appendChild(tr);
         let td1 = document.createElement('th');
-        td1.innerHTML = 'file_name';
+        td1.innerText = 'file_name';
         tr.appendChild(td1);
         let td2 = document.createElement('th');
-        td2.innerHTML = 'file_path';
+        td2.innerText = 'file_path';
         tr.appendChild(td2);
         let td3 = document.createElement('th');
-        td3.innerHTML = 'count';
+        td3.innerText = 'count';
         tr.appendChild(td3);
     }
     function initFilePreview() {
@@ -86,13 +91,17 @@
         let div = document.createElement('div');
         div.className = 'div-file-preview';
         content.append(div);
-        filePreview = document.createElement('p');
+        filePreview = document.createElement('label');
         filePreview.id = 'file-preview';
-        filePreview.innerHTML = 'file-preview';
+        filePreview.innerText = 'file-preview';
         filePreview.className = 'p-file-preview';
         div.appendChild(filePreview);
     }
     function updateResultsInfo(/** @type {Array<Object<string, string>>} */ results) {
+        if (results.length == 0) {
+            filePreview.innerText = 'no result find';
+            return;
+        }
         results.forEach((value, _) => {
             let tr = document.createElement('tr');
             searchResults.appendChild(tr);
@@ -100,13 +109,13 @@
             td1.innerText = /** @type {string} */ (value.fileName);
             tr.appendChild(td1);
             let td2 = document.createElement('th');
-            td2.innerHTML = /** @type {string} */ (value.filePath);
+            td2.innerText = /** @type {string} */ (value.filePath);
             tr.appendChild(td2);
             let td3 = document.createElement('th');
-            td3.innerHTML = /** @type {string} */ (value.count);
+            td3.innerText = /** @type {string} */ (value.count);
             tr.appendChild(td3);
             tr.onclick = function(event) {
-                filePreview.innerHTML = /** @type {string} */ (value.fileData);
+                filePreview.innerText = /** @type {string} */ (value.fileData);
             }
             tr.ondblclick = function(event) {
                 sendMessageToExtension('OpenFileInVSCode', value.filePath);

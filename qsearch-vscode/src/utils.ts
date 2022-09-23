@@ -1,8 +1,15 @@
 import * as vscode from 'vscode';
 
+export function hasWorkspaceFolder() : boolean {
+  if (vscode.workspace.workspaceFolders && (vscode.workspace.workspaceFolders.length > 0)) {
+    return true;
+  }
+  return false;
+}
+
 export function getWorkspaceFolder() {
   const workspaceRoot = (vscode.workspace.workspaceFolders && (vscode.workspace.workspaceFolders.length > 0))
-  ? vscode.workspace.workspaceFolders[0].uri.fsPath : undefined;
+  ? vscode.workspace.workspaceFolders[0].uri.fsPath : '';
   return workspaceRoot;
 }
 

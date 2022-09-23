@@ -19,6 +19,16 @@ export class FileUtils {
     return data;
   }
 
+  public static copyFile(src : string, dst : string, callback : Function) {
+    FileUtils._initInstance();
+    fs.copyFile(src, dst, function(err) {
+      if (err) throw err;
+      if (callback) {
+        callback();
+      }
+    });
+  }
+
   private static _initInstance() {
     if (!FileUtils.fileInstance) {
       FileUtils.fileInstance = new FileUtils();
