@@ -79,7 +79,15 @@ class QSearchViewPanel {
       return;
     }
 
-    const panel = vscode.window.createWebviewPanel(QSearchViewPanel.viewType, 'Quick Search', column || vscode.ViewColumn.One, getWebviewOptions(extensionUri));
+    const panel = vscode.window.createWebviewPanel(
+      QSearchViewPanel.viewType, 'Quick Search', column || vscode.ViewColumn.Two, 
+      {
+        // Enable javascript in the webview
+        enableScripts: true,
+        retainContextWhenHidden: true,
+        // And restrict the webview to only loading content from our extension's `resources` directory.
+        localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'resources')]
+      });
     QSearchViewPanel.currentPanel = new QSearchViewPanel(panel, extensionUri);
   }
 
