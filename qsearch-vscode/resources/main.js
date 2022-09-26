@@ -37,6 +37,7 @@
             checkbox.type = 'checkbox';
             checkbox.className = 'search-param-checkbox';
             let label = document.createElement('label');
+            label.className = 'case-sensitive-text';
             label.appendChild(document.createTextNode(labelText));
             content.appendChild(checkbox);
             content.appendChild(label);
@@ -48,6 +49,7 @@
     }
     function initSearchButton() {
         let btn = document.createElement('button');
+        btn.className = 'searchbtn'
         btn.innerText = 'Search';
         btn.onclick = function() {
             for (let i = searchResults.children.length - 1; i >= 0; i--) {
@@ -71,7 +73,7 @@
         div.className = 'div-search-result';
         content.appendChild(div);
         searchResults = document.createElement('table');
-        searchResults.id = 'search-results';
+        searchResults.className = 'search-results';
         div.appendChild(searchResults);
         let tr = document.createElement('tr');
         searchResults.appendChild(tr);
@@ -102,6 +104,17 @@
             filePreview.innerText = 'no result find';
             return;
         }
+        let tr = document.createElement('tr');
+        searchResults.appendChild(tr);
+        let td_title1 = document.createElement('th');
+        td_title1.innerText = 'file_name';
+        tr.appendChild(td_title1);
+        let td_title2 = document.createElement('th');
+        td_title2.innerText = 'file_path';
+        tr.appendChild(td_title2);
+        let td_title3 = document.createElement('th');
+        td_title3.innerText = 'count';
+        tr.appendChild(td_title3);
         results.forEach((value, _) => {
             let tr = document.createElement('tr');
             searchResults.appendChild(tr);

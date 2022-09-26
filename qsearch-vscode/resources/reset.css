@@ -33,7 +33,7 @@ table,
 tr,
 th,
 td {
-	border: 1px solid black;
+	border: 0.5px solid white;
 }
 table {
 	width: 100%;
@@ -57,7 +57,28 @@ label {
 	font-size: 20px;
 }
 
+.search-results {
+	border-collapse: collapse;
+    margin-top: 10px;
+}
+
+#file-preview {
+	font-size: 14px;
+}
+
+.case-sensitive {
+	margin-top: 0px;
+}
+
+.case-sensitive-text {
+	font-size: 18px;
+}
+
+.searchbtn {
+	margin-top: 10px;
+}
+
 .search-param-checkbox {
-	width: 20px;
-	height: 20px;
+	width: 15px;
+	height: 15px;
 }
